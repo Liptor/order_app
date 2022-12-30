@@ -40,7 +40,7 @@ class MenuController {
         
         let (data, response) = try await URLSession.shared.data(from: menuURL)
         
-        guard let httpResponse = try await URLSession.shared.data(for: request),
+        guard let httpResponse = response as? HTTPURLResponse ,
               httpResponse.statusCode == 200 else {
             throw MenuControllerError.menuItemNotFound
         }
@@ -66,13 +66,13 @@ class MenuController {
         request.httpBody = jsonData
         let (data, response) = try await URLSession.shared.data(for: request)
         
-        guard let httpResponse = URLSession.shared.data(for: request),
+        guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
             throw MenuControllerError.orderRequestFailed
         }
                 
         
-        let decode = JSONDecoder()
+        let decoder = JSONDecoder()
         let orderResponse = try decoder.decode(OrderResponse.self, from: data)
         
         return orderResponse.prepTime
