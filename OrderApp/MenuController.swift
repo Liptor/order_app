@@ -19,6 +19,16 @@ class MenuController {
     func fetchCategories() async throws -> [String] {
         let categoriesURL = baseURL.appendingPathComponent("categories")
         let (data, response) = try await URLSession.shared.data(from: categoriesURL)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw MenuControllerError.categoriesNotFound
+        }
+        
+        let decoder = JSONDecoder()
+        let categoriesResponse = try decoder.decode(CategoriesResponse.self, from: data)
+        
+        return categoriesResponse.categories
     }
     
     
@@ -29,6 +39,16 @@ class MenuController {
         let menuURL = components.url!
         
         let (data, response) = try await URLSession.shared.data(from: menuURL)
+        
+        guard let httpResponse = try await URLSession.shared.data(for: request),
+              httpResponse.statusCode == 200 else {
+            throw MenuControllerError.menuItemNotFound
+        }
+        
+        let decoder = JSONDecoder()
+        let menuResponse = try decoder.decode(MenuResponse.self, from: data)
+        
+        return menuResponse.items
     }
     
     typealias MinutesToPrepare = Int
@@ -45,5 +65,16 @@ class MenuController {
         
         request.httpBody = jsonData
         let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = URLSession.shared.data(for: request),
+              httpResponse.statusCode == 200 else {
+            throw MenuControllerError.orderRequestFailed
+        }
+                
+        
+        let decode = JSONDecoder()
+        let orderResponse = try decoder.decode(OrderResponse.self, from: data)
+        
+        return orderResponse.prepTime
     }
 }
